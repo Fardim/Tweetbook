@@ -2,33 +2,54 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Cosmonaut;
+using Cosmonaut.Extensions;
 using Tweetbook.Domain;
 
 namespace Tweetbook.Services
 {
     public class CosmosPostService: IPostService
     {
-        public Task<List<Post>> GetPostsAsync()
+        private readonly ICosmosStore<CosmosPostDto> _cosmosStore;
+
+        public CosmosPostService(ICosmosStore<CosmosPostDto> cosmosStore)
         {
-            throw new NotImplementedException();
+            _cosmosStore = cosmosStore;
         }
 
-        public Task<Post> GetPostByIdAsync(Guid postId)
+        public async Task<List<Post>> GetPostsAsync()
         {
-            throw new NotImplementedException();
+            var posts = await _cosmosStore.Query().ToListAsync();
+            return posts.Select(x => new Post {Id = Guid.Parse(x.Id), Name = x.Name}).ToList();
         }
 
-        public Task<bool> CreatePostAsync(Post post)
+        public async Task<Post> GetPostByIdAsync(Guid postId)
         {
-            throw new NotImplementedException();
+            var post = await _cosmosStore.FindAsync(postId.ToString(), postId.ToString());
+            return new Post() {Id = Guid.Parse(post.Id), Name = post.Name};
         }
 
-        public Task<bool> UpdatePostAsync(Post postToUpdate)
+        public async Task<bool> CreatePostAsync(Post post)
         {
-            throw new NotImplementedException();
+            var response = await _cosmosStore.AddAsync(new CosmosPostDto {Id = Guid.NewGuid().ToString(), Name = post.Name});
+            post.Id = Guid.Parse(response.Entity.Id);
+            return response.IsSuccess;
         }
 
-        public Task<bool> DeletePostAsync(Guid postId)
+        public async Task<bool> UpdatePostAsync(Post postToUpdate)
+        {
+            var response = await _cosmosStore.UpdateAsync(new CosmosPostDto
+                {Id = postToUpdate.Id.ToString(), Name = postToUpdate.Name});
+            return response.IsSuccess;
+        }
+
+        public async Task<bool> DeletePostAsync(Guid postId)
+        {
+            var response = await _cosmosStore.RemoveByIdAsync(postId.ToString(), postId.ToString());
+            return response.IsSuccess;
+        }
+
+        public Task<bool> UserOwnsPostAsync(Guid postId, string getUserId)
         {
             throw new NotImplementedException();
         }

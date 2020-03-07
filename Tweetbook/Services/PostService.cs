@@ -11,7 +11,6 @@ namespace Tweetbook.Services
     public class PostService: IPostService
     {
         private readonly DataContext _context;
-        private List<Post> _posts;
         public PostService(DataContext context)
         {
             _context = context;
@@ -49,6 +48,21 @@ namespace Tweetbook.Services
                 return deleted> 0;
             }
             return false;
+        }
+
+        public async Task<bool> UserOwnsPostAsync(Guid postId, string getUserId)
+        {
+            var post = await _context.Posts.AsNoTracking().SingleOrDefaultAsync(x => x.Id == postId);
+            if (post == null)
+            {
+                return false;
+            }
+            if (post.UserId != getUserId)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }
