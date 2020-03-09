@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -16,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.Swagger;
 using Tweetbook.Installers;
 using SwaggerOptions = Tweetbook.Options.SwaggerOptions;
+using Microsoft.Extensions.Hosting;
 
 namespace Tweetbook
 {
@@ -49,7 +49,7 @@ namespace Tweetbook
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -74,8 +74,13 @@ namespace Tweetbook
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-            
-            app.UseMvc();
+
+            app.UseRouting();
+            app.UseAuthorization();
+            app.UseEndpoints(endpoints => {
+                endpoints.MapControllers();
+            });
+            //app.UseMvc();
         }
     }
 }
