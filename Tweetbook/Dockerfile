@@ -1,0 +1,22 @@
+#See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
+
+FROM mcr.microsoft.com/dotnet/core/aspnet:2.2-stretch-slim AS base
+WORKDIR /app
+EXPOSE 80
+EXPOSE 443
+
+FROM mcr.microsoft.com/dotnet/core/sdk:2.2-stretch AS build
+WORKDIR /src
+COPY ["Tweetbook/Tweetbook.csproj", "Tweetbook/"]
+RUN dotnet restore "Tweetbook/Tweetbook.csproj"
+COPY . .
+WORKDIR "/src/Tweetbook"
+RUN dotnet build "Tweetbook.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "Tweetbook.csproj" -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "Tweetbook.dll"]
