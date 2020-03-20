@@ -19,6 +19,7 @@ namespace Tweetbook.Installers
                 options.UseSqlServer(
                     configuration.GetConnectionString("DefaultConnection")));
             services.AddDefaultIdentity<IdentityUser>()
+                .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<DataContext>();
             services.AddScoped<IPostService, PostService>();
             //services.AddScoped<IPostService, CosmosPostService>();

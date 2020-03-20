@@ -17,19 +17,33 @@ namespace Tweetbook.Services
         }
         public async Task<List<Post>> GetPostsAsync()
         {
-            return await _context.Posts.ToListAsync();
+            return await _context.Posts.Include(d=> d.Tags).ToListAsync();
         }
 
         public async Task<Post> GetPostByIdAsync(Guid postId)
         {
-            return await _context.Posts.SingleOrDefaultAsync(d => d.Id == postId);
+            return await _context.Posts.Include(d=> d.Tags).SingleOrDefaultAsync(d => d.Id == postId);
         }
 
         public async Task<bool> CreatePostAsync(Post post)
         {
+            post.Tags?.ForEach(x=> x.TagName = x.TagName.ToLower());
+            await AddNewTags(post);
             await _context.Posts.AddAsync(post);
             var created = await _context.SaveChangesAsync();
             return created > 0;
+        }
+
+        private async Task AddNewTags(Post post)
+        {
+            foreach (var tag in post.Tags)
+            {
+                var existingTag = await _context.Tags.SingleOrDefaultAsync((x => x.Name == tag.TagName));
+                if(existingTag != null)
+                    continue;
+                await _context.Tags.AddAsync(new Tag
+                    {Name = tag.TagName, CreateOn = DateTime.Now, CreatorId = post.UserId});
+            }
         }
         public async Task<bool> UpdatePostAsync(Post postToUpdate)
         {
@@ -63,6 +77,42 @@ namespace Tweetbook.Services
             }
 
             return true;
+        }
+
+        public async Task<List<Tag>> GetTagsAsync()
+        {
+            return await _context.Tags.ToListAsync();
+        }
+
+        public async Task<Tag> GetTagByNameAsync(string tagName)
+        {
+            return await _context.Tags.SingleOrDefaultAsync(d => d.Name == tagName);
+        }
+
+        public async Task<bool> CreateTagAsync(Tag tag)
+        {
+            tag.Name = tag.Name.ToLower();
+            var existingTag = await _context.Tags.AsNoTracking().SingleOrDefaultAsync(d => d.Name == tag.Name);
+            if(existingTag!=null)
+            {
+                return true;
+            }
+
+            await _context.Tags.AddAsync(tag);
+            var created = await _context.SaveChangesAsync();
+            return created > 0;
+        }
+
+        public async Task<bool> DeleteTagAsync(string tagName)
+        {
+            var tag = await GetTagByNameAsync(tagName);
+            if (tag != null)
+            {
+                _context.Tags.Remove(tag);
+                var deleted = await _context.SaveChangesAsync();
+                return deleted > 0;
+            }
+            return false;
         }
     }
 }

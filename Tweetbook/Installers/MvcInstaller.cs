@@ -4,12 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Swagger;
+using Tweetbook.Authorization;
 using Tweetbook.Options;
 using Tweetbook.Services;
 
@@ -47,7 +49,19 @@ namespace Tweetbook.Installers
                 x.SaveToken = true;
                 x.TokenValidationParameters = tokenValidationParameters;
             });
-            
+            //services.AddAuthorization(options =>
+            //{
+            //    options.AddPolicy("TagViewer", builder => builder.RequireClaim("tags.view", "true"));
+            //});
+            //services.AddAuthorization();
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("MustWorkForKaiser", builder =>
+                    {
+                        builder.AddRequirements(new WorksForCompanyRequirement("kaiser.com"));
+                    });
+            });
+            services.AddSingleton<IAuthorizationHandler, WorksForCompanyHandler>();
             services.AddSwaggerGen(opt =>
             {
                 opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Tweetbook API", Version = "v1" });

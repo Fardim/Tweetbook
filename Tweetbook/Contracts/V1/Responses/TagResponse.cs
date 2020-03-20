@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Tweetbook.Contracts.V1.Requests
+namespace Tweetbook.Contracts.V1.Responses
 {
-    public class CreatePostRequest
+    public class TagResponse
     {
         public string Name { get; set; }
-        public IEnumerable<string> Tags { get; set; }
     }
 }
